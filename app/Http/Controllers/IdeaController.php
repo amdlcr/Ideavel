@@ -6,6 +6,7 @@ use App\Models\Idea;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\View\View;
 
 class IdeaController extends Controller
@@ -89,27 +90,58 @@ class IdeaController extends Controller
         return redirect()->route('idea.index');
     }
 
-    public function synchronizeLikes(Request $request, Idea $idea)
+    public function synchronizeLikes(Request $request, $id)
     {
-        $this->authorize('updateLikes',$idea);
+        //Primero creamos el validador
+        $validator=Validator::make(
+            //Los datos que va a validar, el id viene de la ruta '/ideas/{idea}/dislikes'
+            ['id'=>$id],   
+            //Las reglas que va a usar para validarlos
+             ['id'=> 'required|numeric|exists:ideas,id']
+        );
 
-        $request->user()->ideasLiked()->toggle([$idea->id]); // pone el like
+        //inicializamos variables, primero array vacio y luego status
+        $datos =[];
+        $status = 200;
 
-        $request->user()->ideasDisliked()->detach($idea->id);//para que quite el like si hay dislike
 
-        //Actualizamos los contadores de like y dislike
-        $idea->likes = $idea->users()->count();
-        $idea->dislikes = $idea->usersDisliked()->count();
-        $idea->save();
+        // fails se usa en laravel cuando has hecho un validador para comprobarlo
+        if($validator->fails()){
+            $datos = [
+                'error'=> true,
+                'respuesta'=> $validator->errors()->first()//con first() muestra solo el primer error que salta. errors() es un metodo de laravel que devuelve los errores de la validacion.
+            ];
+            $status = 400;
+        }else{
 
-        return response()->json([
-            //contadores de like y dislike de la idea
-            'likes' => $idea->likes,
-            'dislikes' => $idea->dislikes,
-            //Boolean que le indica si el usuario le ha dado like o dislike
-            'liked' => $request->user()->ideasLiked->contains($idea->id),
-            'disliked' => false
-        ]);
+        //Una vez ya validado el id, buscamos la informacion de la ieda con la que trbajamos en la tabla de datos para poder usar su informacion
+            $idea= Idea::find($id);//find() en LAravel Eloquent es una función utilizada para buscar y recuperar un único registro específico de la base de datos
+
+            $this->authorize('updateLikes',$idea); //autorizamos que solo un usuario diferente al creador de la idea haga like, eso esta hecho en IdeaPolicy.php
+
+            $request->user()->ideasLiked()->toggle([$idea->id]); // pone el like
+            $request->user()->ideasDisliked()->detach($idea->id);//para que quite el like si hay dislike
+
+            //Actualizamos los contadores de like y dislike
+            $idea->likes = $idea->users()->count();
+            $idea->dislikes = $idea->usersDisliked()->count();
+            $idea->save();
+
+            $datos = [
+                'error'=> false,
+                'respuesta'=> [
+                    //contadores de like y dislike de la idea
+                    'likes' => $idea->likes,
+                    'dislikes' => $idea->dislikes,
+                    //Boolean que le indica si el usuario le ha dado like o dislike
+                    'liked' => $request->user()->ideasLiked->contains($idea->id),
+                    'disliked' => false
+                ]];
+            $status = 200;
+        }
+
+        return response()->json($datos, $status);
+       
     }
 
 
@@ -133,7 +165,8 @@ class IdeaController extends Controller
             //Boolean que le indica si el usuario le ha dado like o dislike
             'liked' => false,
             'disliked' => $request->user()->ideasDisliked->contains($idea->id)
-        ]);
+        ], 200);
+
     }
 
 
