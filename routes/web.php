@@ -38,5 +38,7 @@ Route::post('/ideas/crear',[IdeaController::class, 'store'])-> name('idea.store'
 Route::get('/ideas/editar/{idea}',[IdeaController::class, 'edit'])-> name('idea.edit');
 Route::put('/ideas/actualizar/{idea}',[IdeaController::class, 'update'])-> name('idea.update');
 Route::delete('/ideas/{idea}',[IdeaController::class, 'delete'])-> name('idea.delete');
-Route::put('/ideas/{idea}/like',[IdeaController::class, 'synchronizeLikes'])-> name('idea.likes');
-Route::put('/ideas/{idea}/dislikes', [IdeaController::class, 'synchronizeDislikes'])->name('idea.dislikes');
+//Route::put('/ideas/{idea}/like',[IdeaController::class, 'synchronizeLikes'])-> name('idea.likes');
+//Route::put('/ideas/{idea}/dislikes', [IdeaController::class, 'synchronizeDislikes'])->name('idea.dislikes');
+Route::put('/ideas/{idea}/gestion', [IdeaController::class, 'gestionLikes'])->name('ideas.gestion');
+
