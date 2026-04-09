@@ -1,4 +1,4 @@
-document.querySelectorAll(".btn_like").forEach(btn => { //selecciona todos los botones de like de la pagina y para cada uno de ellos,al hacer click se ejecuta su funcionamiento
+/*document.querySelectorAll(".btn_like").forEach(btn => { //selecciona todos los botones de like de la pagina y para cada uno de ellos,al hacer click se ejecuta su funcionamiento
     btn.onclick = async function () { //usamos async para que podamos usar wait, y asi poder esperar a que el servidor conteste para poder continuar
         const idIdea = this.dataset.id; //Seleccionamos cada idea gracias a su data-id
         const divIdea = this.closest("div"); //Selecionamos el div concreto de cada idea, para que no afecte a las demas ideas
@@ -42,7 +42,7 @@ document.querySelectorAll(".btn_like").forEach(btn => { //selecciona todos los b
 
 document.querySelectorAll(".btn_dislike").forEach(btn => {
     btn.onclick = function () {
-        const idIdea = this.dataset.id; //Seleccionamos cada idea gracias a su data-id
+        const idIdea = this.dataset.id; 
         const divIdea = this.closest("div");
 
         fetch("/ideas/" + idIdea + "/dislikes", {
@@ -62,3 +62,71 @@ document.querySelectorAll(".btn_dislike").forEach(btn => {
         });
     };
 });  
+*/
+
+
+//---------------
+
+
+document.querySelectorAll('.btn_like').forEach(boton => { 
+    boton.onclick = async function () { 
+        const idIdea = this.dataset.id; 
+        const divIdea = this.closest("div"); 
+        
+       try{
+
+        const valores = {
+            id : this.dataset.id,
+            reaccion : this.value
+        };
+
+        const respuestaControlador = await fetch("/ideas/" + idIdea + "/gestion", { 
+            method: "PUT",
+            headers: {
+                "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content, 
+                "Accept": "application/json",     //Aqui hay que enviar otro json para el controlador qu ellegue con request
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(valores)
+            }
+        );
+
+        const ObjetoJson = await respuestaControlador.json();
+
+        if (ObjetoJson.error === true){
+                    throw new Error(ObjetoJson.respuesta);
+                }
+            
+
+            divIdea.querySelector(".likes_count").innerText = ObjetoJson.respuesta.likes;
+            divIdea.querySelector(".dislikes_count").innerText = ObjetoJson.respuesta.dislikes;
+
+            const botonLike = divIdea.querySelector('button[value="like"]');
+            const botonDislike = divIdea.querySelector('button[value="dislike"]');
+
+            console.log(ObjetoJson);
+            if (ObjetoJson.respuesta.liked == true) {
+                botonLike.classList.add('liked_color');
+            } else {
+                botonLike.classList.remove('liked_color');
+            }
+
+            if (ObjetoJson.respuesta.disliked == true) {
+                botonDislike.classList.add('disliked_color');
+            } else {
+                botonDislike.classList.remove('disliked_color');
+            }
+
+
+
+
+            }catch (miError){
+
+            alert(miError.message);
+            console.error("Error al procesar el like: ",miError); 
+
+        } 
+          
+    };
+    
+});
