@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\View\View;
+use Illuminate\Validation\Rule;
 
 class IdeaController extends Controller
 {
@@ -168,6 +169,71 @@ class IdeaController extends Controller
         ], 200);
 
     }
+
+
+    public function gestionLikes (Request $request){
+
+
+        $datos = [
+            'error'=> true,
+            'respuesta'=> ""];
+
+        $status = 400;
+        $idIdea = $request->input('id');
+        $reaccionIdea = $request->input('reaccion');
+
+        $validator=Validator::make(
+            ['id'=>$idIdea,   
+            'reaccion'=> $reaccionIdea ],
+            ['id'=> 'required|numeric|exists:ideas,id',
+             'reaccion'=> 'string|in:like,dislike']
+        );
+
+        if($validator->fails()){
+            $datos = [
+                'respuesta'=> $validator->errors()->first()
+            ];
+            return response()->json($datos, $status);
+        }
+
+        $idea= Idea::find($idIdea);
+        $this->authorize('updateLikes',$idea);
+
+        if($reaccionIdea ==='like'){
+
+            $request->user()->ideasLiked()->toggle([$idea->id]);
+            $request->user()->ideasDisliked()->detach($idea->id);
+
+        }else{
+            $request->user()->ideasDisliked()->toggle([$idea->id]); 
+            $request->user()->ideasLiked()->detach($idea->id);
+        };
+
+        $idea->likes = $idea->users()->count();
+        $idea->dislikes = $idea->usersDisliked()->count();
+        $idea->save();
+
+        $datos = [
+                'error'=> false,
+                'respuesta'=> [
+                    'likes' => $idea->likes,
+                    'dislikes' => $idea->dislikes,
+                    'liked' => $request->user()->ideasLiked->contains($idea->id),
+                    'disliked' => $request->user()->ideasDisliked->contains($idea->id)
+                ]];
+            $status = 200;
+
+        return response()->json($datos, $status);
+
+
+
+    }
+
+
+
+
+
+
 
 
 
