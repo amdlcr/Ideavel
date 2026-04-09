@@ -122,8 +122,8 @@ document.querySelectorAll('.btn_like').forEach(boton => {
 
             }catch (miError){
 
-            alert(miError.message);
-            console.error("Error al procesar el like: ",miError); 
+            alert("No tienes acceso a esa acción, prueba con otra idea.");
+            console.error(miError); 
 
         } 
           
