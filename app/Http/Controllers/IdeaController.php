@@ -35,6 +35,32 @@ class IdeaController extends Controller
 
     }
 
+
+    public function buscar( Request $request)
+    {
+        $busqueda= $request->buscar; 
+        
+   /*   $ideas = Idea::where('title', 'LIKE', "%$busqueda%")
+    ->orWhereHas('user', function ($consultaEnUsers) use ($busqueda) {
+        $consultaEnUsers->where('name', 'LIKE', "$busqueda");
+    })->get();*/
+
+     $ideas = Idea::where('title', 'LIKE', "%$busqueda%")
+    ->orWhere('description','LIKE',"%$busqueda%")
+    ->orWhereHas('user', function ($consultaEnUsers) use ($busqueda) {
+        $consultaEnUsers->where('name', 'LIKE', "$busqueda");
+    })->get();
+
+
+         
+         return view('ideas.index',['ideas'=> $ideas] );
+
+    }
+
+
+
+
+    
     public function create(): View
     {
         return view('ideas.create_or_edit');
@@ -172,13 +198,6 @@ class IdeaController extends Controller
 
 
     public function gestionLikes (Request $request){
-
-
-        $datos = [
-            'error'=> true,
-            'respuesta'=> ""];
-
-        $status = 400;
         $idIdea = $request->input('id');
         $reaccionIdea = $request->input('reaccion');
 
@@ -188,6 +207,11 @@ class IdeaController extends Controller
             ['id'=> 'required|numeric|exists:ideas,id',
              'reaccion'=> 'string|in:like,dislike']
         );
+
+        $datos = [
+            'error'=> true,
+            'respuesta'=> ""];
+        $status = 400;
 
         if($validator->fails()){
             $datos = [
@@ -229,6 +253,9 @@ class IdeaController extends Controller
 
     }
 
+
+
+   
 
 
 
