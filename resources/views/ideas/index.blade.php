@@ -27,7 +27,19 @@
                     <a href="{{route('idea.index', ['filtro'=> 'las-mejores'])}}" class="px-4 py-4 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-500 rounded-md font-semibold text-sm text-gray-700 dark:text-gray-300 uppercase tracking-widest shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700">Las Mejores</a>
                 </div>
             </div>
-            <div class="bg-white dark:bg-gray-800 shadow-sm sm:rounded-lg">
+
+
+
+<div id = "buscador" class="flex justify-end items-center mb-4">
+    <form action="{{ route('idea.buscar') }}" method="GET" >
+        <input type="text"  name ="buscar" placeholder="Buscar">
+        <button type="submit" class="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-500 rounded-md font-semibold text-sm text-gray-700 dark:text-gray-300 uppercase tracking-widest shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700">Buscar</button>
+        
+    </form>
+</div>
+
+
+            <div id = "resultadoBusqueda" class="bg-white dark:bg-gray-800 shadow-sm sm:rounded-lg">
                 @forelse($ideas as $idea)
                 <div class="p-6 flex space-x-2">
                     <svg fill="#ffffff" width="24px" height="24px" viewBox="0 0 32 32" version="1.1"
@@ -88,8 +100,6 @@
 
 
 
-
-                        
 
 <div class="flex items-center space-x-8">
 
