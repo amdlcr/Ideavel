@@ -40,16 +40,16 @@ class IdeaController extends Controller
     {
         $busqueda= $request->buscar; 
         
-   /*   $ideas = Idea::where('title', 'LIKE', "%$busqueda%")
-    ->orWhereHas('user', function ($consultaEnUsers) use ($busqueda) {
-        $consultaEnUsers->where('name', 'LIKE', "$busqueda");
-    })->get();*/
-
      $ideas = Idea::where('title', 'LIKE', "%$busqueda%")
-    ->orWhere('description','LIKE',"%$busqueda%")
     ->orWhereHas('user', function ($consultaEnUsers) use ($busqueda) {
         $consultaEnUsers->where('name', 'LIKE', "$busqueda");
     })->get();
+
+     /*$ideas = Idea::where('title', 'LIKE', "%$busqueda%")
+    ->orWhere('description','LIKE',"%$busqueda%")
+    ->orWhereHas('user', function ($consultaEnUsers) use ($busqueda) {
+        $consultaEnUsers->where('name', 'LIKE', "$busqueda");
+    })->get();*/
 
 
          
@@ -117,7 +117,64 @@ class IdeaController extends Controller
         return redirect()->route('idea.index');
     }
 
-    public function synchronizeLikes(Request $request, $id)
+    /**
+    * Gestiona los likes y los dislikes.
+    * @param Request $request
+    * @return JsonResponse
+    **/
+    public function gestionLikes (Request $request){
+        $idIdea = $request->input('id');
+        $reaccionIdea = $request->input('reaccion');
+
+        $validator=Validator::make(
+            ['id'=>$idIdea,   
+            'reaccion'=> $reaccionIdea ],
+            ['id'=> 'required|numeric|exists:ideas,id',
+             'reaccion'=> 'string|in:like,dislike']
+        );
+
+        $datos = [
+            'error'=> true,
+            'respuesta'=> ""];
+        $status = 400;
+
+        if($validator->fails()){
+            $datos = [
+                'respuesta'=> $validator->errors()->first()
+            ];
+            return response()->json($datos, $status);
+        }
+
+        $idea= Idea::find($idIdea);
+        $this->authorize('updateLikes',$idea);
+
+        if($reaccionIdea ==='like'){
+            $request->user()->ideasLiked()->toggle([$idea->id]);
+            $request->user()->ideasDisliked()->detach($idea->id);
+
+        }else{
+            $request->user()->ideasDisliked()->toggle([$idea->id]); 
+            $request->user()->ideasLiked()->detach($idea->id);
+        };
+
+        $idea->likes = $idea->users()->count();
+        $idea->dislikes = $idea->usersDisliked()->count();
+        $idea->save();
+
+        $datos = [
+                'error'=> false,
+                'respuesta'=> [
+                    'likes' => $idea->likes,
+                    'dislikes' => $idea->dislikes,
+                    'liked' => $request->user()->ideasLiked->contains($idea->id),
+                    'disliked' => $request->user()->ideasDisliked->contains($idea->id)
+                ]];
+        $status = 200;
+        return response()->json($datos, $status);
+    }
+
+
+    /*public function synchronizeLikes(Request $request, $id)
     {
         //Primero creamos el validador
         $validator=Validator::make(
@@ -194,75 +251,6 @@ class IdeaController extends Controller
             'disliked' => $request->user()->ideasDisliked->contains($idea->id)
         ], 200);
 
-    }
-
-
-    public function gestionLikes (Request $request){
-        $idIdea = $request->input('id');
-        $reaccionIdea = $request->input('reaccion');
-
-        $validator=Validator::make(
-            ['id'=>$idIdea,   
-            'reaccion'=> $reaccionIdea ],
-            ['id'=> 'required|numeric|exists:ideas,id',
-             'reaccion'=> 'string|in:like,dislike']
-        );
-
-        $datos = [
-            'error'=> true,
-            'respuesta'=> ""];
-        $status = 400;
-
-        if($validator->fails()){
-            $datos = [
-                'respuesta'=> $validator->errors()->first()
-            ];
-            return response()->json($datos, $status);
-        }
-
-        $idea= Idea::find($idIdea);
-        $this->authorize('updateLikes',$idea);
-
-        if($reaccionIdea ==='like'){
-
-            $request->user()->ideasLiked()->toggle([$idea->id]);
-            $request->user()->ideasDisliked()->detach($idea->id);
-
-        }else{
-            $request->user()->ideasDisliked()->toggle([$idea->id]); 
-            $request->user()->ideasLiked()->detach($idea->id);
-        };
-
-        $idea->likes = $idea->users()->count();
-        $idea->dislikes = $idea->usersDisliked()->count();
-        $idea->save();
-
-        $datos = [
-                'error'=> false,
-                'respuesta'=> [
-                    'likes' => $idea->likes,
-                    'dislikes' => $idea->dislikes,
-                    'liked' => $request->user()->ideasLiked->contains($idea->id),
-                    'disliked' => $request->user()->ideasDisliked->contains($idea->id)
-                ]];
-            $status = 200;
-
-        return response()->json($datos, $status);
-
-
-
-    }
-
-
-
-   
-
-
-
-
-
-
-
-
+    }*/
 
 }
