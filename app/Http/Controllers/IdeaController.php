@@ -39,27 +39,34 @@ class IdeaController extends Controller
     public function buscar( Request $request)
     {
         $busqueda= $request->buscar; 
-        
-     $ideas = Idea::where('title', 'LIKE', "%$busqueda%")
-    ->orWhereHas('user', function ($consultaEnUsers) use ($busqueda) {
-        $consultaEnUsers->where('name', 'LIKE', "$busqueda");
-    })->get();
+        $desplegable = $request->input('selector');
 
-     /*$ideas = Idea::where('title', 'LIKE', "%$busqueda%")
-    ->orWhere('description','LIKE',"%$busqueda%")
-    ->orWhereHas('user', function ($consultaEnUsers) use ($busqueda) {
-        $consultaEnUsers->where('name', 'LIKE', "$busqueda");
-    })->get();*/
+            switch($desplegable){
+                case 'titulo':
+                    $ideas= Idea::where('title', 'LIKE', "%$busqueda%")->get();
+                        break;
+                
+                case 'descripcion':
+                    $ideas= Idea::where('description','LIKE',"%$busqueda%")->get();
+                        break;
+                
+                case 'autor':
+                    $ideas= Idea::whereHas ('user', function ($consultaEnUsers) use ($busqueda) {
+                    $consultaEnUsers->where('name', 'LIKE', "$busqueda");
+                    })->get();
+                        break;
+                default:
+                    $ideas = [];
+                    break;         
+            }
+        return view('ideas.index',['ideas'=> $ideas] );
 
-
-         
-         return view('ideas.index',['ideas'=> $ideas] );
-
+            /*$ideas = Idea::where('title', 'LIKE', "%$busqueda%")
+            ->orWhere('description','LIKE',"%$busqueda%")
+            ->orWhereHas('user', function ($consultaEnUsers) use ($busqueda) {
+                $consultaEnUsers->where('name', 'LIKE', "$busqueda");
+            })->get();*/
     }
-
-
-
-
     
     public function create(): View
     {
