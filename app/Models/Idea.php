@@ -41,7 +41,7 @@ class Idea extends Model
     public function scopeTheBest(Builder $query, $filter) : void
     {
         if(!empty($filter) == 'las-mejores'){
-            $query->orderBy('likes', 'desc');
+            $query->orderBy('likes', 'desc')->where('likes','>',0);
         }
         
     }
