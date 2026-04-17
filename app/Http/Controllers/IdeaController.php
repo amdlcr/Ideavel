@@ -29,43 +29,46 @@ class IdeaController extends Controller
 
     public function index(Request $request): View
     {
-
         $ideas = Idea::myIdeas($request->filtro)->TheBest($request->filtro)->latest('id')->get();//es un select* from a la BBDD de ideas
-        return view('ideas.index',['ideas'=> $ideas] );    
+        $fields = $this->getFields();
+        
+        return view('ideas.index',['ideas'=> $ideas, 'fields' => $fields] );    
+    }
 
+    private function getFields()
+    {
+        return [
+            ['value' => 'title', 'label' => 'Título'],
+            ['value' => 'description', 'label' => 'Descripción'],
+            ['value' => 'user', 'label' => 'Autor'],
+        ];
     }
 
 
-    public function buscar( Request $request)
+    public function search( Request $request)
     {
-        $busqueda= $request->buscar; 
-        $desplegable = $request->input('selector');
+        $validator = Validator::make($request->all(), [
+            'search_field' => ['required', Rule::in(array_column($this->getFields(), 'value'))],
+            'search_input' => 'required|string'
+        ]);
 
-            switch($desplegable){
-                case 'titulo':
-                    $ideas= Idea::where('title', 'LIKE', "%$busqueda%")->get();
-                        break;
-                
-                case 'descripcion':
-                    $ideas= Idea::where('description','LIKE',"%$busqueda%")->get();
-                        break;
-                
-                case 'autor':
-                    $ideas= Idea::whereHas ('user', function ($consultaEnUsers) use ($busqueda) {
-                    $consultaEnUsers->where('name', 'LIKE', "$busqueda");
-                    })->get();
-                        break;
-                default:
-                    $ideas = [];
-                    break;         
-            }
-        return view('ideas.index',['ideas'=> $ideas] );
+        if ($validator->fails()) {
+            return back()->withErrors($validator);
+        }
 
-            /*$ideas = Idea::where('title', 'LIKE', "%$busqueda%")
-            ->orWhere('description','LIKE',"%$busqueda%")
-            ->orWhereHas('user', function ($consultaEnUsers) use ($busqueda) {
-                $consultaEnUsers->where('name', 'LIKE', "$busqueda");
-            })->get();*/
+        $searchText= $request->input('search_input'); 
+        $selectedField = $request->input('search_field');
+        $fields = $this->getFields();
+      
+        if ($selectedField === 'title' || $selectedField === 'description') {
+            $ideas = Idea::where($selectedField, 'LIKE', "%$searchText%")->get();
+        } else{
+            $ideas= Idea::whereHas ('user', function ($consultaEnUsers) use ($searchText) {
+            $consultaEnUsers->where('name', 'LIKE', "$searchText");
+            })->get();
+        }
+          
+        return view('ideas.index',['ideas'=> $ideas, 'fields' => $fields] );
     }
     
     public function create(): View
