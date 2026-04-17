@@ -6,6 +6,7 @@
     <title></title>
 <meta name="csrf-token" content="{{ csrf_token() }}">
 <link rel="stylesheet" href="{{ asset('css/boton.css') }}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
 
 </head>
@@ -29,23 +30,32 @@
             </div>
 
 
+            
+            <div id="searcher" class="flex items-center justify-end gap-2 mb-4 overflow-visible">
+                <form id="searchForm" action="{{ route('idea.search') }}" method="POST" >
+                    @csrf
+                    <input type="text"  id= "search_input"name ="search_input" placeholder="¿Qué quieres buscar?">
+                   
+                    <select name="search_field" id="search_field">
+                            <option value="" selected disabled>Elige una opción</option>
+                        @foreach($fields as $field)
+                            <option value="{{ $field['value'] }}"> {{ $field['label'] }}</option>
+                        @endforeach   
+                    </select>
 
-<div id = "buscador" class="flex justify-end items-center mb-4">
-    <form action="{{ route('idea.buscar') }}" method="GET" >
-        <input type="text"  name ="buscar" placeholder="Buscar">
+                    <button name= "btn_search" type="button" class="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-500 rounded-md font-semibold text-sm text-gray-700 dark:text-gray-300 uppercase tracking-widest shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700">Buscar</button>
+                    <button type="button" name="clean" class="p-2 text-gray-700 hover:text-red-500"><i class="fa-solid fa-retweet"></i></button>
+                </form>
+            </div>
+            @if ($errors->any())
+            <div class="flex justify-end mb-4">
+                <div >
+                    Error: No estas buscando dentro de los parámetros permitidos
+                </div>
+            </div>
+             @endif
 
-        <select name="selector" >
-            <option value="">Elige una opción</option>
-            <option value="autor">Autor</option>
-            <option value="titulo">Título</option>
-            <option value="descripcion">Descripción</option>
-        </select>
-
-        <button type="submit" class="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-500 rounded-md font-semibold text-sm text-gray-700 dark:text-gray-300 uppercase tracking-widest shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700">Buscar</button>
-        
-    </form>
-</div>
-
+            <div id="errorBox" class="flex justify-end mb-4"></div>
 
             <div id = "resultadoBusqueda" class="bg-white dark:bg-gray-800 shadow-sm sm:rounded-lg">
                 @forelse($ideas as $idea)
@@ -152,6 +162,7 @@
     </div>
 </x-app-layout>
 <script src="{{ asset('js/likes.js') }}"></script>
+<script src="{{ asset('js/search.js') }}"></script>
 
 
 
