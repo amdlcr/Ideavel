@@ -13,10 +13,17 @@ use Illuminate\Validation\Rule;
 class IdeaController extends Controller
 {
 
+
+    protected $fields = [
+        'title' => 'Título',
+        'description' => 'Descripción',
+        'user' => 'Autor',
+    ];
+
     private $rules = [
         'title'=> 'required|string|max:100',
         'description'=> 'required|string|max:300',
-        ];
+    ];
 
     private array $errorMessages = [
         'title.required'=> 'El campo título es obligatorio',
@@ -24,42 +31,33 @@ class IdeaController extends Controller
         'string'=> 'Este campo debe ser de tipo String',
         'title.max'=> 'El campo título no debe ser mayor a 100 carácteres',
         'description.max'=> 'El campo descripción no debe ser mayor a :max carácteres',
-        ];
+    ];
 
 
     public function index(Request $request): View
     {
         $ideas = Idea::myIdeas($request->filtro)->TheBest($request->filtro)->latest('id')->get();//es un select* from a la BBDD de ideas
-        $fields = $this->getFields();
+        $fields = $this->fields;
         
         return view('ideas.index',['ideas'=> $ideas, 'fields' => $fields] );    
     }
 
-    private function getFields()
-    {
-        return [
-            ['value' => 'title', 'label' => 'Título'],
-            ['value' => 'description', 'label' => 'Descripción'],
-            ['value' => 'user', 'label' => 'Autor'],
-        ];
-    }
-
-
     public function search( Request $request)
     {
+        $fields = $this->fields;
         $validator = Validator::make($request->all(), [
-            'search_field' => ['required', Rule::in(array_column($this->getFields(), 'value'))],
+            'search_field' => ['required', Rule::in(array_keys($this->fields))],
             'search_input' => 'required|string'
-        ]);
+            ]);
 
         if ($validator->fails()) {
-            return back()->withErrors($validator);
+            return redirect()->route('idea.index')->withErrors($validator);
         }
 
         $searchText= $request->input('search_input'); 
         $selectedField = $request->input('search_field');
-        $fields = $this->getFields();
-      
+        
+
         if ($selectedField === 'title' || $selectedField === 'description') {
             $ideas = Idea::where($selectedField, 'LIKE', "%$searchText%")->get();
         } else{
