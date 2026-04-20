@@ -38,12 +38,12 @@
                    
                     <select name="search_field" id="search_field">
                             <option value="" selected disabled>Elige una opción</option>
-                        @foreach($fields as $field)
-                            <option value="{{ $field['value'] }}"> {{ $field['label'] }}</option>
+                        @foreach($fields as $value =>$label)
+                            <option value="{{ $value }}"> {{ $label}}</option>
                         @endforeach   
                     </select>
 
-                    <button name= "btn_search" type="button" class="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-500 rounded-md font-semibold text-sm text-gray-700 dark:text-gray-300 uppercase tracking-widest shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700">Buscar</button>
+                    <button name= "btn_search" type="submit" class="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-500 rounded-md font-semibold text-sm text-gray-700 dark:text-gray-300 uppercase tracking-widest shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700">Buscar</button>
                     <button type="button" name="clean" class="p-2 text-gray-700 hover:text-red-500"><i class="fa-solid fa-retweet"></i></button>
                 </form>
             </div>
@@ -53,7 +53,7 @@
                     Error: No estas buscando dentro de los parámetros permitidos
                 </div>
             </div>
-             @endif
+            @endif
 
             <div id="errorBox" class="flex justify-end mb-4"></div>
 
